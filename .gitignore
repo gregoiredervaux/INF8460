@@ -1,0 +1,12 @@
+# TP1 data
+TP1/data/*
+
+# fichier d'IDE
+TP1/.idea/*
+
+# cache python
+*/__pycache__/*
+
+# fichier pdf
+
+*.pdf
