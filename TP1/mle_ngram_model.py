@@ -10,6 +10,10 @@ Sauf mention contraire, le paramètre `corpus` désigne une liste de phrases tok
 """
 from itertools import chain
 from itertools import permutations
+from random import choices
+import collections
+
+import preprocess_corpus as pre
 
 
 def extract_ngrams_from_sentence(sentence, n):
@@ -73,22 +77,18 @@ def count_ngrams(corpus, n):
     """
 
     n_gram_corpus = extract_ngrams(corpus, n)
-    nested_dictionnary = {}
-    flatten_cropus = []
-    [[[flatten_cropus.append(word) for word in n_gram ] for n_gram in sentence] for sentence in n_gram_corpus]
-    n_gram_permuted = permutations(list(set(flatten_cropus)), n)
-
-    for n_gram in n_gram_permuted:
-        if n_gram[0:n - 1] in nested_dictionnary:
-            if n_gram[-1] not in nested_dictionnary[n_gram[0:n - 1]]:
-                nested_dictionnary[n_gram[0:n - 1]][n_gram[-1]] = 0
-        else:
-            nested_dictionnary[n_gram[0:n - 1]] = {n_gram[-1]: 0}
-
+    nested_dictionnary = collections.defaultdict(lambda: 0)
 
     for sentence in n_gram_corpus:
         for n_gram in sentence:
-            nested_dictionnary[n_gram[0:n - 1]][n_gram[-1]] += 1
+            if n_gram[0:n - 1] in nested_dictionnary:
+                if n_gram[-1] in nested_dictionnary[n_gram[0:n - 1]]:
+                    nested_dictionnary[n_gram[0:n - 1]][n_gram[-1]] += 1
+                else:
+                    nested_dictionnary[n_gram[0:n - 1]][n_gram[-1]] = 1
+            else:
+                nested_dictionnary[n_gram[0:n - 1]] = collections.defaultdict(lambda: 0)
+                nested_dictionnary[n_gram[0:n - 1]][n_gram[-1]] = 1
 
     return nested_dictionnary
 
@@ -146,7 +146,10 @@ class NgramModel(object):
         :param context: tuple(str), un (n-1)-gramme de contexte
         :return: str
         """
-        pass
+        p = [self.counts[context][word] for word in self.counts[context]]
+        chosen = choices(list(self.counts[context].keys()), p)
+        return chosen[0]
+
 
 
 if __name__ == "__main__":
@@ -178,6 +181,7 @@ if __name__ == "__main__":
         3: [("<s>", "<s>"), ("<s>", "I"), ("Something", "is"), ("To", "be"), ("O", "Romeo")]
     }
 
+    print("#### test ####")
     print(extract_ngrams_from_sentence(["Alice", "est", "là"], 2))
     print(extract_ngrams([["Alice", "est", "là"], ["Bob", "est", "ici"]], 2))
 
@@ -189,3 +193,13 @@ if __name__ == "__main__":
     print(mle_counts[("est",)]["là"])  # 1/2
     print(mle_counts[("est",)]["Alice"])  # 0/2
 
+    print("#### fin test ####")
+
+    fileName = "shakespeare_train"
+    corpus = pre.read_and_preprocess("./data/" + fileName + ".txt")
+
+    for n in contexts.keys():
+        Model = NgramModel(corpus, n)
+        print("\nn=" + str(n))
+        for tuple_n in contexts[n]:
+            print("%s --> %s" % (str(tuple_n), Model.predict_next(tuple_n)))
