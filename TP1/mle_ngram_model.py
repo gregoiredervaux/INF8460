@@ -92,11 +92,6 @@ def count_ngrams(corpus, n):
 
     return nested_dictionnary
 
-
-
-
-
-
 def compute_MLE(counts):
     """
     À partir de l'objet `counts` produit par la fonction `count_ngrams`, transforme les comptes en probabilités.
@@ -110,8 +105,14 @@ def compute_MLE(counts):
     :param counts: mapping(tuple(str)->mapping(str->int))
     :return: mapping(tuple(str)->mapping(str->float))
     """
-    pass
-
+    for n_gram_begining in counts:
+        sum_n_gram = 0
+        for n_gram_end in counts[n_gram_begining]:
+            sum_n_gram += counts[n_gram_begining][n_gram_end]
+        if sum_n_gram != 0:
+            for n_gram_end in counts[n_gram_begining]:
+                counts[n_gram_begining][n_gram_end] = counts[n_gram_begining][n_gram_end]/sum_n_gram
+    return counts
 
 class NgramModel(object):
     def __init__(self, corpus, n):
@@ -183,4 +184,8 @@ if __name__ == "__main__":
     counts = count_ngrams([["Alice", "est", "là"], ["Bob", "est", "ici"]], 2)
     print(counts[("est",)]["là"])  # Bigramme connu
     print(counts[("est",)]["Alice"])  # Bigramme inconnu
+
+    mle_counts = compute_MLE(counts)
+    print(mle_counts[("est",)]["là"])  # 1/2
+    print(mle_counts[("est",)]["Alice"])  # 0/2
 
