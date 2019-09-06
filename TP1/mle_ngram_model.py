@@ -9,6 +9,7 @@ vous pourrez alors entraîner un modèle n-gramme sur un corpus avec la commande
 Sauf mention contraire, le paramètre `corpus` désigne une liste de phrases tokenizées
 """
 from itertools import chain
+from itertools import permutations
 
 
 def extract_ngrams_from_sentence(sentence, n):
@@ -24,7 +25,16 @@ def extract_ngrams_from_sentence(sentence, n):
     :param n: int, l'ordre des n-grammes
     :return: list(tuple(str)), la liste des n-grammes présents dans `sentence`
     """
-    pass
+    sentence.append("</s>")
+    sentence.insert(0, "<s>")
+    n_gram_list = []
+    for i in range(len(sentence) - n + 1):
+        n_gram = []
+        for j in range(n):
+            n_gram.append(sentence[i + j])
+        n_gram_list.append(tuple(n_gram))
+    return n_gram_list
+
 
 
 def extract_ngrams(corpus, n):
@@ -41,7 +51,7 @@ def extract_ngrams(corpus, n):
     :param n: int, l'ordre des n-grammes
     :return: list(list(tuple(str))), la liste contenant les listes de n-grammes de chaque phrase
     """
-    pass
+    return [extract_ngrams_from_sentence(sentence, n) for sentence in corpus]
 
 
 def count_ngrams(corpus, n):
@@ -61,7 +71,31 @@ def count_ngrams(corpus, n):
     :param n: int, l'ordre de n-grammes
     :return: mapping(tuple(str)->mapping(str->int)), l'objet contenant les comptes de chaque n-gramme
     """
-    pass
+
+    n_gram_corpus = extract_ngrams(corpus, n)
+    nested_dictionnary = {}
+    flatten_cropus = []
+    [[[flatten_cropus.append(word) for word in n_gram ] for n_gram in sentence] for sentence in n_gram_corpus]
+    n_gram_permuted = permutations(list(set(flatten_cropus)), n)
+
+    for n_gram in n_gram_permuted:
+        if n_gram[0:n - 1] in nested_dictionnary:
+            if n_gram[-1] not in nested_dictionnary[n_gram[0:n - 1]]:
+                nested_dictionnary[n_gram[0:n - 1]][n_gram[-1]] = 0
+        else:
+            nested_dictionnary[n_gram[0:n - 1]] = {n_gram[-1]: 0}
+
+
+    for sentence in n_gram_corpus:
+        for n_gram in sentence:
+            nested_dictionnary[n_gram[0:n - 1]][n_gram[-1]] += 1
+
+    return nested_dictionnary
+
+
+
+
+
 
 def compute_MLE(counts):
     """
@@ -142,3 +176,11 @@ if __name__ == "__main__":
         2: [("King",), ("I",), ("<s>",)],
         3: [("<s>", "<s>"), ("<s>", "I"), ("Something", "is"), ("To", "be"), ("O", "Romeo")]
     }
+
+    print(extract_ngrams_from_sentence(["Alice", "est", "là"], 2))
+    print(extract_ngrams([["Alice", "est", "là"], ["Bob", "est", "ici"]], 2))
+
+    counts = count_ngrams([["Alice", "est", "là"], ["Bob", "est", "ici"]], 2)
+    print(counts[("est",)]["là"])  # Bigramme connu
+    print(counts[("est",)]["Alice"])  # Bigramme inconnu
+
