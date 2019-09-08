@@ -124,7 +124,6 @@ if __name__ == "__main__":
     ```
     """
     fileName = "./data/shakespeare_test"
-    raw_text = ""
     with open(fileName + ".txt", "r") as f:
         raw_text = f.read()
     test_preprocessing(raw_text)
