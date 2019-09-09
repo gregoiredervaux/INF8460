@@ -31,7 +31,7 @@ def extract_ngrams_from_sentence(sentence, n):
     """
 
     sentence.insert(0, "<s>")
-    sentence.insert(1, "<s>")
+    sentence.append("</s>")
 
     n_gram_list = []
     for i in range(len(sentence) - n + 1):
@@ -40,11 +40,7 @@ def extract_ngrams_from_sentence(sentence, n):
             n_gram.append(sentence[i + j])
         n_gram_list.append(tuple(n_gram))
 
-    sentence.append("</s>")
-    sentence.append("</s>")
-
     return n_gram_list
-
 
 
 def extract_ngrams(corpus, n):
@@ -61,7 +57,11 @@ def extract_ngrams(corpus, n):
     :param n: int, l'ordre des n-grammes
     :return: list(list(tuple(str))), la liste contenant les listes de n-grammes de chaque phrase
     """
-    return [extract_ngrams_from_sentence(sentence, n) for sentence in corpus]
+
+    n_gram_corpus = []
+    for sentence in corpus:
+        n_gram_corpus.append(extract_ngrams_from_sentence(sentence.copy(), n))
+    return n_gram_corpus
 
 
 def count_ngrams(corpus, n):
