@@ -29,14 +29,20 @@ def extract_ngrams_from_sentence(sentence, n):
     :param n: int, l'ordre des n-grammes
     :return: list(tuple(str)), la liste des n-grammes présents dans `sentence`
     """
-    sentence.append("</s>")
+
     sentence.insert(0, "<s>")
+    sentence.insert(1, "<s>")
+
     n_gram_list = []
     for i in range(len(sentence) - n + 1):
         n_gram = []
         for j in range(n):
             n_gram.append(sentence[i + j])
         n_gram_list.append(tuple(n_gram))
+
+    sentence.append("</s>")
+    sentence.append("</s>")
+
     return n_gram_list
 
 

@@ -19,6 +19,12 @@ from nltk.lm.models import MLE, Laplace, Lidstone
 from nltk.lm.vocabulary import Vocabulary
 from nltk.lm.preprocessing import padded_everygram_pipeline
 
+import matplotlib.pyplot as plt
+import itertools
+import mle_model_validation as mle
+import mle_ngram_model as ngram
+import preprocess_corpus as pre
+import numpy as np
 
 def train_LM_model(corpus, model, n, gamma=None, unk_cutoff=2):
     """
@@ -32,8 +38,20 @@ def train_LM_model(corpus, model, n, gamma=None, unk_cutoff=2):
     :param unk_cutoff: le seuil au-dessous duquel un mot est considéré comme inconnu et remplacé par <UNK>
     :return: un modèle entraîné
     """
-    pass
 
+    vocabulary = Vocabulary(list(itertools.chain(*corpus)), unk_cutoff)
+    ngrams = ngram.extract_ngrams(corpus, n)
+
+    if (model == Lidstone) and (gamma is not None):
+        model = Lidstone(n,gamma)
+        model.fit(ngrams,vocabulary)
+    elif model == MLE:
+        model = mle.train_MLE_model(corpus,n)
+    elif model == Laplace:
+        model = Laplace(n)
+        model.fit(ngrams,vocabulary)
+
+    return model
 
 def evaluate(model, corpus):
     """
@@ -43,7 +61,7 @@ def evaluate(model, corpus):
     :param corpus: list(list(str)), une corpus tokenizé
     :return: float
     """
-    pass
+    return model.perplexity(corpus)
 
 
 def evaluate_gamma(gamma, train, test, n):
@@ -82,29 +100,75 @@ def generate(model, n_words, text_seed=None, random_seed=None):
     ne pas fixer de seed, il suffit de laisser `random_seed=None`
     :return: str
     """
-    pass
+    end_tweet = '</s>'
+
+    while True:
+        tweet_generated = model.generate(n_words)
+        # if (end_tweet in tweet_generated) and (tweet_generated.index(end_tweet) == 20) and (len(tweet_generated) == 20):
+        if len(tweet_generated) == 20:
+            return tweet_generated
 
 
 if __name__ == "__main__":
     """
     Vous aurez ici trois tâches à accomplir ici :
-    
+
     1)
-    Dans un premier temps, vous devez entraîner des modèles de langue MLE et Laplace pour n=1, 2, 3 à l'aide de la 
-    fonction `train_MLE_model` sur le corpus `shakespeare_train` (question 1.4.2). Puis vous devrez évaluer vos modèles 
+    Dans un premier temps, vous devez entraîner des modèles de langue MLE et Laplace pour n=1, 2, 3 à l'aide de la
+    fonction `train_MLE_model` sur le corpus `shakespeare_train` (question 1.4.2). Puis vous devrez évaluer vos modèles
     en mesurant leur perplexité sur le corpus `shakespeare_test` (question 1.5.2).
-    
+
     2)
-    Ensuite, on vous demande de tracer un graphe représentant le perplexité d'un modèle Lidstone en fonction du paramètre 
-    gamma. Vous pourrez appeler la fonction `evaluate_gamma` (déjà écrite) sur `shakespeare_train` et `shakespeare_test` 
-    en faisant varier gamma dans l'intervalle (10^-5, 1) (question 1.5.3). Vous utiliserez une échelle logarithmique en 
+    Ensuite, on vous demande de tracer un graphe représentant le perplexité d'un modèle Lidstone en fonction du paramètre
+    gamma. Vous pourrez appeler la fonction `evaluate_gamma` (déjà écrite) sur `shakespeare_train` et `shakespeare_test`
+    en faisant varier gamma dans l'intervalle (10^-5, 1) (question 1.5.3). Vous utiliserez une échelle logarithmique en
     abscisse et en ordonnée.
-    
-    Note : pour les valeurs de gamma à tester, vous pouvez utiliser la fonction `numpy.logspace(-5, 0, 10)` qui renvoie 
+
+    Note : pour les valeurs de gamma à tester, vous pouvez utiliser la fonction `numpy.logspace(-5, 0, 10)` qui renvoie
     une liste de 10 nombres, répartis logarithmiquement entre 10^-5 et 1.
-    
+
     3)
     Enfin, pour chaque n=1, 2, 3, vous devrez générer 2 segments de 20 mots pour des modèles MLE entraînés sur Trump.
     Réglez `unk_cutoff=1` pour éviter que le modèle ne génère des tokens <UNK> (question 1.6.2).
     """
-    pass
+
+    n = 3
+    # fileName_train = "shakespeare_train"
+    # fileName_test = "shakespeare_test"
+    # corpus_train = pre.read_and_preprocess("./data/" + fileName_train + ".txt")
+    # corpus_test = pre.read_and_preprocess("./data/" + fileName_test + ".txt")
+    #
+    # print("Question 1")
+    # for i in range(1,n+1):
+    #     print("n = "+ str(i))
+    #     MLE_model = train_LM_model(corpus_train, MLE, i)
+    #     LAPLACE_model = train_LM_model(corpus_train, Laplace, i)
+    #     ngrams = ngram.extract_ngrams(corpus_test,i)
+    #
+    #     print("perplexité du modèle MLE : " + str(evaluate(MLE_model,ngrams)) \
+    #     + " ,preplexité du modèle Laplace : " + str(evaluate(LAPLACE_model,ngrams)))
+
+
+    # print("Question 2")
+    # for i in range(1,n+1):
+    #     x = []
+    #     y = []
+    #     print("n = " + str(i))
+    #     for gamma in np.logspace(-5, 0, 10):
+    #         y.append(evaluate_gamma(gamma, corpus_train, corpus_test, i))
+    #         x.append(gamma)
+    #     plt.plot(x,y)
+    #
+    # plt.xlabel('gamma')
+    # plt.ylabel('perplexity')
+    # plt.legend()
+    # plt.show()
+
+    fileName_train = "trump"
+    corpus_train = pre.read_and_preprocess("./data/" + fileName_train + ".txt")
+    print("Question 3")
+    for i in range(1,n+1):
+        print("n = "+ str(i))
+        MLE_model = train_LM_model(corpus_train, MLE, i,None, 1)
+        print(generate(MLE_model, 20))
+        print(generate(MLE_model, 20))
