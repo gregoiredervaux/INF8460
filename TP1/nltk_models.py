@@ -39,17 +39,19 @@ def train_LM_model(corpus, model, n, gamma=None, unk_cutoff=2):
     :return: un modèle entraîné
     """
 
-    vocabulary = Vocabulary(list(itertools.chain(*corpus)), unk_cutoff)
-    ngrams = ngram.extract_ngrams(corpus, n)
+    # vocabulary = Vocabulary(list(itertools.chain(*corpus)), unk_cutoff)
+    # ngrams = ngram.extract_ngrams(corpus, n)
+
+    ngrams, vocabulary = padded_everygram_pipeline(n, corpus)
 
     if (model == Lidstone) and (gamma is not None):
-        model = Lidstone(n,gamma)
-        model.fit(ngrams,vocabulary)
+        model = Lidstone(n, gamma)
+        model.fit(ngrams, vocabulary)
     elif model == MLE:
-        model = mle.train_MLE_model(corpus,n)
+        model = mle.train_MLE_model(corpus, n)
     elif model == Laplace:
         model = Laplace(n)
-        model.fit(ngrams,vocabulary)
+        model.fit(ngrams, vocabulary)
 
     return model
 
@@ -61,7 +63,8 @@ def evaluate(model, corpus):
     :param corpus: list(list(str)), une corpus tokenizé
     :return: float
     """
-    return model.perplexity(corpus)
+    n_gram_tuple = list(set(itertools.chain(*corpus)))
+    return model.perplexity(n_gram_tuple)
 
 
 def evaluate_gamma(gamma, train, test, n):
@@ -133,36 +136,36 @@ if __name__ == "__main__":
     """
 
     n = 3
-    # fileName_train = "shakespeare_train"
-    # fileName_test = "shakespeare_test"
-    # corpus_train = pre.read_and_preprocess("./data/" + fileName_train + ".txt")
-    # corpus_test = pre.read_and_preprocess("./data/" + fileName_test + ".txt")
-    #
-    # print("Question 1")
-    # for i in range(1,n+1):
-    #     print("n = "+ str(i))
-    #     MLE_model = train_LM_model(corpus_train, MLE, i)
-    #     LAPLACE_model = train_LM_model(corpus_train, Laplace, i)
-    #     ngrams = ngram.extract_ngrams(corpus_test,i)
-    #
-    #     print("perplexité du modèle MLE : " + str(evaluate(MLE_model,ngrams)) \
-    #     + " ,preplexité du modèle Laplace : " + str(evaluate(LAPLACE_model,ngrams)))
+    fileName_train = "shakespeare_train"
+    fileName_test = "shakespeare_test"
+    corpus_train = pre.read_and_preprocess("./data/" + fileName_train + ".txt")
+    corpus_test = pre.read_and_preprocess("./data/" + fileName_test + ".txt")
+
+    print("Question 1")
+    for i in range(1,n+1):
+        print("n = "+ str(i))
+        MLE_model = train_LM_model(corpus_train, MLE, i)
+        LAPLACE_model = train_LM_model(corpus_train, Laplace, i)
+        ngrams = ngram.extract_ngrams(corpus_test,i)
+
+        print("perplexité du modèle MLE : " + str(evaluate(MLE_model,ngrams)) \
+        + " ,preplexité du modèle Laplace : " + str(evaluate(LAPLACE_model,ngrams)))
 
 
-    # print("Question 2")
-    # for i in range(1,n+1):
-    #     x = []
-    #     y = []
-    #     print("n = " + str(i))
-    #     for gamma in np.logspace(-5, 0, 10):
-    #         y.append(evaluate_gamma(gamma, corpus_train, corpus_test, i))
-    #         x.append(gamma)
-    #     plt.plot(x,y)
-    #
-    # plt.xlabel('gamma')
-    # plt.ylabel('perplexity')
-    # plt.legend()
-    # plt.show()
+    print("Question 2")
+    for i in range(1,n+1):
+        x = []
+        y = []
+        print("n = " + str(i))
+        for gamma in np.logspace(-5, 0, 10):
+            y.append(evaluate_gamma(gamma, corpus_train, corpus_test, i))
+            x.append(gamma)
+        plt.plot(x,y)
+
+    plt.xlabel('gamma')
+    plt.ylabel('perplexity')
+    plt.legend()
+    plt.show()
 
     fileName_train = "trump"
     corpus_train = pre.read_and_preprocess("./data/" + fileName_train + ".txt")

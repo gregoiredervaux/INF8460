@@ -152,8 +152,11 @@ class NgramModel(object):
         :param context: tuple(str), un (n-1)-gramme de contexte
         :return: str
         """
-        p = [self.counts[context][word] for word in self.counts[context]]
-        chosen = choices(list(self.counts[context].keys()), p)
+        if self.counts[context] != 0:
+            p = [self.counts[context][word] for word in self.counts[context]]
+            chosen = choices(list(self.counts[context].keys()), p)
+        else:
+            chosen=["<Not found in the text>"]
         return chosen[0]
 
 
@@ -184,7 +187,7 @@ if __name__ == "__main__":
     contexts = {
         1: [()],
         2: [("King",), ("I",), ("<s>",)],
-        3: [("<s>", "<s>"), ("<s>", "I"), ("Something", "is"), ("To", "be"), ("O", "Romeo")]
+        3: [("<s>", "<s>"), ("<s>", "I"), ("Something", "is"), ("To", "be"), ("O", "Romeo"), ("</s>", "</s>")]
     }
 
     print("#### test ####")
@@ -208,4 +211,4 @@ if __name__ == "__main__":
         Model = NgramModel(corpus, n)
         print("\nn=" + str(n))
         for tuple_n in contexts[n]:
-            print("%s --> %s" % (str(tuple_n), Model.predict_next(tuple_n)))
+            print("%s --> %s" % (str(tuple_n), str(Model.predict_next(tuple_n))))
