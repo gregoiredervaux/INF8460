@@ -39,19 +39,16 @@ def train_LM_model(corpus, model, n, gamma=None, unk_cutoff=2):
     :return: un modèle entraîné
     """
 
-    # vocabulary = Vocabulary(list(itertools.chain(*corpus)), unk_cutoff)
-    # ngrams = ngram.extract_ngrams(corpus, n)
-
-    ngrams, vocabulary = padded_everygram_pipeline(n, corpus)
+    train, vocab = padded_everygram_pipeline(n, corpus)
 
     if (model == Lidstone) and (gamma is not None):
-        model = Lidstone(n, gamma)
-        model.fit(ngrams, vocabulary)
+        model = Lidstone(n,gamma)
+        model.fit(train,vocab)
     elif model == MLE:
         model = mle.train_MLE_model(corpus, n)
     elif model == Laplace:
         model = Laplace(n)
-        model.fit(ngrams, vocabulary)
+        model.fit(train,vocab)
 
     return model
 
@@ -103,10 +100,9 @@ def generate(model, n_words, text_seed=None, random_seed=None):
     ne pas fixer de seed, il suffit de laisser `random_seed=None`
     :return: str
     """
-    end_tweet = '</s>'
 
     while True:
-        tweet_generated = model.generate(n_words)
+        tweet_generated = model.generate(n_words,text_seed)
         # if (end_tweet in tweet_generated) and (tweet_generated.index(end_tweet) == 20) and (len(tweet_generated) == 20):
         if len(tweet_generated) == 20:
             return tweet_generated
@@ -167,11 +163,20 @@ if __name__ == "__main__":
     plt.legend()
     plt.show()
 
-    fileName_train = "trump"
-    corpus_train = pre.read_and_preprocess("./data/" + fileName_train + ".txt")
-    print("Question 3")
-    for i in range(1,n+1):
-        print("n = "+ str(i))
-        MLE_model = train_LM_model(corpus_train, MLE, i,None, 1)
-        print(generate(MLE_model, 20))
-        print(generate(MLE_model, 20))
+    # fileName_train = "trump"
+    # corpus_train = pre.read_and_preprocess("./data/" + fileName_train + ".txt")
+    # print("Question 3")
+    # for i in range(1,n+1):
+    #     print("n = "+ str(i))
+    #     MLE_model = train_LM_model(corpus_train, MLE, i,None, 2)
+    #     # Laplace_model = train_LM_model(corpus_train, Laplace, i,None, 2)
+    #
+    #     if n==1:
+    #         text_seed = ()
+    #     elif n==2:
+    #         text_seed = ("<s>",)
+    #     elif n==3:
+    #         text_seed = ("<s>", "<s>")
+    #
+    #     print(generate(MLE_model, 20,text_seed))
+    #     print(generate(MLE_model, 20,text_seed))
