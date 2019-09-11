@@ -34,9 +34,9 @@ def train_MLE_model(corpus, n):
     :return: un modèle entraîné
     """
     model = MLE(n)
-    # vocab = Vocabulary(list(itertools.chain(*corpus)), unk_cutoff=1)
-    # train = custom_model.extract_ngrams(corpus, n)
-    train, vocab = padded_everygram_pipeline(n, corpus)
+    #vocab = Vocabulary(list(itertools.chain(*corpus)), unk_cutoff=1)
+    _, vocab = padded_everygram_pipeline(n, corpus)
+    train = custom_model.extract_ngrams(corpus, n)
     model.fit(train, vocab)
     return model
 
@@ -56,15 +56,19 @@ def compare_models(your_model, nltk_model, corpus, n):
     """
     n_gram_count = 0
     n_gram_diff = 0
-    counts = your_model.counts
-    for n_gram_begining in counts:
-        for n_gram_end in counts[n_gram_begining]:
+
+    n_grams = custom_model.extract_ngrams(corpus, n)
+    for sentence in n_grams:
+        for n_gram in sentence :
+            n_gram_begining = n_gram[:-1]
+            n_gram_end = n_gram[-1]
             if your_model.proba(n_gram_end, n_gram_begining) != nltk_model.unmasked_score(n_gram_end, n_gram_begining):
-                print("Différente probabilité pour le n_gram " + str(n_gram_begining) + " + " +str(n_gram_end))
-                print(str(counts[n_gram_begining][n_gram_end]) + " vs " + str(nltk_model.unmasked_score(n_gram_end, n_gram_begining)))
+                print("Différente probabilité pour le n_gram " + str(n_gram_begining) + " + " + str(n_gram_end))
+                print(str(your_model.proba(n_gram_end, n_gram_begining)) + " vs " + str(
+                    nltk_model.unmasked_score(n_gram_end, n_gram_begining)))
                 n_gram_diff += 1
             n_gram_count += 1
-    return n_gram_diff/n_gram_count
+    return n_gram_diff / n_gram_count
 
 
 if __name__ == "__main__":
@@ -74,15 +78,6 @@ if __name__ == "__main__":
     `compare_models `pour vérifier qu'ils donnent les mêmes résultats.
     Comme corpus de test, vous choisirez aléatoirement 50 phrases dans `shakespeare_train`.
     """
-    # fileName = "shakespeare_train"
-    # corpus = pre.read_and_preprocess("./data/" + fileName + ".txt")
-
-    # for n in (range(1, 4)):
-    #     print("\n###### %i ######" % n)
-    #     model = train_MLE_model(corpus, n)
-    #     my_model = custom_model.NgramModel(corpus, n)
-    #     diff = compare_models(my_model, model, random.sample(corpus, 50), n)
-    #     print("\n for n=%i : %f" % (n, diff))
 
     fileName = "shakespeare_train"
     corpus = pre.read_and_preprocess("./data/" + fileName + ".txt")
@@ -90,6 +85,5 @@ if __name__ == "__main__":
         print("\n###### %i ######" % n)
         my_model = custom_model.NgramModel(corpus, n)
         model = train_MLE_model(corpus, n)
-        #my_model = custom_model.NgramModel(corpus, n)
-        diff = compare_models(my_model, model, random.sample(corpus, 10), n)
+        diff = compare_models(my_model, model, corpus, n)
         print("\n for n=%i : %f" % (n, diff))
