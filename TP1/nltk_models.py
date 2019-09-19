@@ -17,8 +17,7 @@ On peut ensuite entraîner le modèle avec la méthode `model.fit(ngrams)`
 """
 from nltk.lm.models import MLE, Laplace, Lidstone
 from nltk.lm.vocabulary import Vocabulary
-from nltk.lm.preprocessing import padded_everygram_pipeline, pad_both_ends, flatten
-from nltk.util import bigrams, everygrams
+from nltk.lm.preprocessing import padded_everygram_pipeline
 
 import matplotlib.pyplot as plt
 import itertools
@@ -27,7 +26,7 @@ import mle_ngram_model as ngram
 import preprocess_corpus as pre
 import numpy as np
 
-def train_LM_model(corpus, model, n, gamma=None, unk_cutoff=1):
+def train_LM_model(corpus, model, n, gamma=None, unk_cutoff=2):
     """
     Entraîne un modèle de langue n-gramme NLTK de la classe `model` sur le corpus.
 
@@ -40,17 +39,17 @@ def train_LM_model(corpus, model, n, gamma=None, unk_cutoff=1):
     :return: un modèle entraîné
     """
 
-    train, words = padded_everygram_pipeline(n, corpus.copy())
-    vocab = Vocabulary(words, unk_cutoff)
-
+    train, vocab = padded_everygram_pipeline(n, corpus)
     if (model == Lidstone) and (gamma is not None):
         model = Lidstone(gamma,n,vocab)
-        model.fit(train)
+        model.fit(train,vocab)
     elif model == MLE:
+        #model = MLE(n)
+        #model.fit(train, vocab)
         model = mle.train_MLE_model(corpus, n)
     elif model == Laplace:
-        model = Laplace(n,vocab)
-        model.fit(train)
+        model = Laplace(n)
+        model.fit(train,vocab)
 
     return model
 
@@ -62,9 +61,9 @@ def evaluate(model, corpus):
     :param corpus: list(list(str)), une corpus tokenizé
     :return: float
     """
-    ngrams = ngram.extract_ngrams(model, model.order)
-    ngrams = flatten(ngrams)
-    return model.perplexity(corpus)
+    n_gram_tuple = (list(set(itertools.chain(*corpus))))
+    return model.perplexity(n_gram_tuple)
+
 
 def evaluate_gamma(gamma, train, test, n):
     """
@@ -104,16 +103,9 @@ def generate(model, n_words, text_seed=None, random_seed=None):
     """
 
     while True:
-        tweet_valid = True
         tweet_generated = model.generate(n_words,text_seed)
-        end_list = list(filter(lambda x: tweet_generated[x] == '</s>', range(len(tweet_generated))))
-
-        for end_id in end_list:
-            if end_id<len(tweet_generated)-1 and tweet_generated[end_id+1] != '<s>':
-                tweet_valid = False
-                break
-
-        if tweet_valid and len(tweet_generated) == 20:
+        # if (end_tweet in tweet_generated) and (tweet_generated.index(end_tweet) == 20) and (len(tweet_generated) == 20):
+        if len(tweet_generated) == 20:
             return tweet_generated
 
 
@@ -146,31 +138,31 @@ if __name__ == "__main__":
     corpus_train = pre.read_and_preprocess("./data/" + fileName_train + ".txt")
     corpus_test = pre.read_and_preprocess("./data/" + fileName_test + ".txt")
 
-
     print("Question 1")
     for i in range(1,n+1):
         print("n = "+ str(i))
         MLE_model = train_LM_model(corpus_train, MLE, i)
-        LAPLACE_model = train_LM_model(corpus_train, Laplace, i,2)
+        LAPLACE_model = train_LM_model(corpus_train, Laplace, i)
+        ngrams = ngram.extract_ngrams(corpus_test,i)
 
-        print("perplexité du modèle MLE : " + str(evaluate(MLE_model,corpus_test)) \
-        + " ,perplexité du modèle Laplace : " + str(evaluate(LAPLACE_model,corpus_test)))
+        print("perplexité du modèle MLE : " + str(evaluate(MLE_model,ngrams)) \
+        + " ,preplexité du modèle Laplace : " + str(evaluate(LAPLACE_model,ngrams)))
 
 
-    print("Question 2")
-    for i in range(1,n+1):
-        x = []
-        y = []
-        print("n = " + str(i))
-        for gamma in np.logspace(-5, 0, 10):
-            y.append(evaluate_gamma(gamma, corpus_train, corpus_test, i))
-            x.append(gamma)
-
-        plt.plot(x,y)
-        plt.xlabel('gamma')
-        plt.ylabel('perplexity')
-        plt.legend()
-        plt.show()
+    # print("Question 2")
+    # for i in range(1,n+1):
+    #     x = []
+    #     y = []
+    #     print("n = " + str(i))
+    #     for gamma in np.logspace(-5, 0, 10):
+    #         y.append(evaluate_gamma(gamma, corpus_train, corpus_test, i))
+    #         x.append(gamma)
+    #     plt.plot(x,y)
+    #
+    # plt.xlabel('gamma')
+    # plt.ylabel('perplexity')
+    # plt.legend()
+    # plt.show()
 
     # fileName_train = "trump"
     # corpus_train = pre.read_and_preprocess("./data/" + fileName_train + ".txt")
