@@ -62,9 +62,9 @@ def evaluate(model, corpus):
     :param corpus: list(list(str)), une corpus tokenizé
     :return: float
     """
-    ngrams = ngram.extract_ngrams(model, model.order)
+    ngrams = ngram.extract_ngrams(corpus, model.order)
     ngrams = flatten(ngrams)
-    return model.perplexity(corpus)
+    return model.perplexity(ngrams)
 
 def evaluate_gamma(gamma, train, test, n):
     """
@@ -102,20 +102,41 @@ def generate(model, n_words, text_seed=None, random_seed=None):
     ne pas fixer de seed, il suffit de laisser `random_seed=None`
     :return: str
     """
+    tweet = []
+    nb_word = 0
 
-    while True:
-        tweet_valid = True
+    if text_seed is None:
+        if model.order==1:
+            text_seed = ()
+        elif model.order==2:
+            text_seed = ("<s>",)
+            tweet.append("<s>")
+        elif model.order==3:
+            text_seed = ("<s>", "<s>")
+            tweet.append("<s>")
+            tweet.append("<s>")
+
+    while nb_word < 20:
         tweet_generated = model.generate(n_words,text_seed)
-        end_list = list(filter(lambda x: tweet_generated[x] == '</s>', range(len(tweet_generated))))
 
-        for end_id in end_list:
-            if end_id<len(tweet_generated)-1 and tweet_generated[end_id+1] != '<s>':
-                tweet_valid = False
+        for i in range(0,n_words):
+            if tweet_generated[i] == "</s>":
+                tweet.append("</s>")
+
+                if model.order==3:
+                    tweet.append("</s>")
+                    tweet.append("<s>")
+
+                tweet.append("<s>")
+                break
+            elif nb_word == 20:
                 break
 
-        if tweet_valid and len(tweet_generated) == 20:
-            return tweet_generated
+            else:
+                nb_word += 1
+                tweet.append(tweet_generated[i])
 
+    return " ".join(tweet).replace("# ", "#").replace("@ ", "@")
 
 if __name__ == "__main__":
     """
@@ -141,51 +162,44 @@ if __name__ == "__main__":
     """
 
     n = 3
-    fileName_train = "shakespeare_train"
-    fileName_test = "shakespeare_test"
-    corpus_train = pre.read_and_preprocess("./data/" + fileName_train + ".txt")
-    corpus_test = pre.read_and_preprocess("./data/" + fileName_test + ".txt")
-
-
-    print("Question 1")
-    for i in range(1,n+1):
-        print("n = "+ str(i))
-        MLE_model = train_LM_model(corpus_train, MLE, i)
-        LAPLACE_model = train_LM_model(corpus_train, Laplace, i,2)
-
-        print("perplexité du modèle MLE : " + str(evaluate(MLE_model,corpus_test)) \
-        + " ,perplexité du modèle Laplace : " + str(evaluate(LAPLACE_model,corpus_test)))
-
-
-    print("Question 2")
-    for i in range(1,n+1):
-        x = []
-        y = []
-        print("n = " + str(i))
-        for gamma in np.logspace(-5, 0, 10):
-            y.append(evaluate_gamma(gamma, corpus_train, corpus_test, i))
-            x.append(gamma)
-
-        plt.plot(x,y)
-        plt.xlabel('gamma')
-        plt.ylabel('perplexity')
-        plt.legend()
-        plt.show()
-
-    # fileName_train = "trump"
+    # fileName_train = "shakespeare_train"
+    # fileName_test = "shakespeare_test"
     # corpus_train = pre.read_and_preprocess("./data/" + fileName_train + ".txt")
-    # print("Question 3")
+    # corpus_test = pre.read_and_preprocess("./data/" + fileName_test + ".txt")
+
+
+    # print("Question 1")
     # for i in range(1,n+1):
     #     print("n = "+ str(i))
-    #     MLE_model = train_LM_model(corpus_train, MLE, i,None, 2)
-    #     # Laplace_model = train_LM_model(corpus_train, Laplace, i,None, 2)
+    #     MLE_model = train_LM_model(corpus_train, MLE, i)
+    #     LAPLACE_model = train_LM_model(corpus_train, Laplace, i,2)
     #
-    #     if n==1:
-    #         text_seed = ()
-    #     elif n==2:
-    #         text_seed = ("<s>",)
-    #     elif n==3:
-    #         text_seed = ("<s>", "<s>")
+    #     print("perplexité du modèle MLE : " + str(evaluate(MLE_model,corpus_test)) \
+    #     + " ,perplexité du modèle Laplace : " + str(evaluate(LAPLACE_model,corpus_test)))
+
+
+    # print("Question 2")
+    # for i in range(1,n+1):
+    #     x = []
+    #     y = []
+    #     print("n = " + str(i))
+    #     for gamma in np.logspace(-5, 0, 10):
+    #         y.append(evaluate_gamma(gamma, corpus_train, corpus_test, i))
+    #         x.append(gamma)
     #
-    #     print(generate(MLE_model, 20,text_seed))
-    #     print(generate(MLE_model, 20,text_seed))
+    #     plt.plot(x,y)
+    #     plt.xlabel('gamma')
+    #     plt.ylabel('perplexity')
+    #     plt.show()
+
+    fileName_train = "trump"
+    corpus_train = pre.read_and_preprocess("./data/" + fileName_train + ".txt")
+    print("Question 3")
+    for i in range(1,n+1):
+        print("n = "+ str(i))
+        MLE_model = train_LM_model(corpus_train, MLE, i,None, 2)
+
+        print(generate(MLE_model, 20))
+        print(generate(MLE_model, 20))
+        # print(" ".join(generate(MLE_model, 20)))
+        # print(" ".join(generate(MLE_model, 20)))
