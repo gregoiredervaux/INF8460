@@ -12,6 +12,7 @@ from itertools import chain
 from itertools import permutations
 from random import choices
 import collections
+from nltk.lm.preprocessing import pad_both_ends
 
 import preprocess_corpus as pre
 
@@ -30,8 +31,7 @@ def extract_ngrams_from_sentence(sentence, n):
     :return: list(tuple(str)), la liste des n-grammes présents dans `sentence`
     """
 
-    sentence.insert(0, "<s>")
-    sentence.append("</s>")
+    sentence = list(pad_both_ends(sentence, n))
 
     n_gram_list = []
     for i in range(len(sentence) - n + 1):

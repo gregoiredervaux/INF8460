@@ -91,5 +91,5 @@ if __name__ == "__main__":
         my_model = custom_model.NgramModel(corpus, n)
         model = train_MLE_model(corpus, n)
         #my_model = custom_model.NgramModel(corpus, n)
-        diff = compare_models(my_model, model, random.sample(corpus, 10), n)
+        diff = compare_models(my_model, model, random.sample(corpus, 50), n)
         print("\n for n=%i : %f" % (n, diff))

@@ -162,20 +162,20 @@ if __name__ == "__main__":
     """
 
     n = 3
-    # fileName_train = "shakespeare_train"
-    # fileName_test = "shakespeare_test"
-    # corpus_train = pre.read_and_preprocess("./data/" + fileName_train + ".txt")
-    # corpus_test = pre.read_and_preprocess("./data/" + fileName_test + ".txt")
+    fileName_train = "shakespeare_train"
+    fileName_test = "shakespeare_test"
+    corpus_train = pre.read_and_preprocess("./data/" + fileName_train + ".txt")
+    corpus_test = pre.read_and_preprocess("./data/" + fileName_test + ".txt")
 
 
-    # print("Question 1")
-    # for i in range(1,n+1):
-    #     print("n = "+ str(i))
-    #     MLE_model = train_LM_model(corpus_train, MLE, i)
-    #     LAPLACE_model = train_LM_model(corpus_train, Laplace, i,2)
-    #
-    #     print("perplexité du modèle MLE : " + str(evaluate(MLE_model,corpus_test)) \
-    #     + " ,perplexité du modèle Laplace : " + str(evaluate(LAPLACE_model,corpus_test)))
+    print("Question 1")
+    for i in range(1,n+1):
+        print("n = "+ str(i))
+        MLE_model = train_LM_model(corpus_train, MLE, i)
+        LAPLACE_model = train_LM_model(corpus_train, Laplace, i,2)
+
+        print("perplexité du modèle MLE : " + str(evaluate(MLE_model,corpus_test)) \
+        + " ,perplexité du modèle Laplace : " + str(evaluate(LAPLACE_model,corpus_test)))
 
 
     # print("Question 2")
@@ -192,14 +192,12 @@ if __name__ == "__main__":
     #     plt.ylabel('perplexity')
     #     plt.show()
 
-    fileName_train = "trump"
-    corpus_train = pre.read_and_preprocess("./data/" + fileName_train + ".txt")
-    print("Question 3")
-    for i in range(1,n+1):
-        print("n = "+ str(i))
-        MLE_model = train_LM_model(corpus_train, MLE, i,None, 2)
-
-        print(generate(MLE_model, 20))
-        print(generate(MLE_model, 20))
-        # print(" ".join(generate(MLE_model, 20)))
-        # print(" ".join(generate(MLE_model, 20)))
+    # fileName_train = "trump"
+    # corpus_train = pre.read_and_preprocess("./data/" + fileName_train + ".txt")
+    # print("Question 3")
+    # for i in range(1,n+1):
+    #     print("n = "+ str(i))
+    #     MLE_model = train_LM_model(corpus_train, MLE, i,None, 2)
+    #
+    #     print(generate(MLE_model, 20))
+    #     print(generate(MLE_model, 20))
