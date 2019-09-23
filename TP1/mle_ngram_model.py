@@ -12,6 +12,9 @@ from itertools import chain
 from itertools import permutations
 from random import choices
 import collections
+from nltk.lm.preprocessing import pad_both_ends
+import operator
+import collections
 
 import preprocess_corpus as pre
 
@@ -30,8 +33,7 @@ def extract_ngrams_from_sentence(sentence, n):
     :return: list(tuple(str)), la liste des n-grammes présents dans `sentence`
     """
 
-    sentence.insert(0, "<s>")
-    sentence.append("</s>")
+    sentence = list(pad_both_ends(sentence, n))
 
     n_gram_list = []
     for i in range(len(sentence) - n + 1):
@@ -214,3 +216,20 @@ if __name__ == "__main__":
         print("\nn=" + str(n))
         for tuple_n in contexts[n]:
             print("%s --> %s" % (str(tuple_n), str(Model.predict_next(tuple_n))))
+
+    print("--------------")
+
+    for i in range(1,4):
+        print("\n--- Pour n = " + str(i) + "---")
+        counts = count_ngrams(corpus, i)
+        newDict = {}
+
+        for key in counts:
+            for k,v in counts[key].items():
+                newDict[key + tuple([k])] = v
+
+        sorted_dict = sorted(newDict.items(), key=operator.itemgetter(1), reverse=True)
+        count_dict = collections.OrderedDict(sorted_dict)
+
+        for key in list(count_dict)[:20]:
+            print(str(key) + " : " + str(count_dict[key]))

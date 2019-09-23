@@ -96,14 +96,14 @@ def explore(corpus):
     list_freq = get_most_frequent(corpus, 15)
     print("items les plus fréquents: " + str(list_freq[0]))
     print("frequence des items     : " + str(list_freq[1]))
-    print("Ration token/type: " + str(get_token_type_ratio(corpus)))
+    print("Ratio token/type: " + str(get_token_type_ratio(corpus)))
     print("Nombre de lemmes: " + str(count_lemmas(corpus)))
     print("Nombre de stems: " + str(count_stems(corpus)))
 
 
 if __name__ == "__main__":
     """
-    Ici, appelez la fonction `explore` sur `shakespeare_train` et `shakespeare_test`. Quand on exécute le fichier, on 
+    Ici, appelez la fonction `explore` sur `shakespeare_train` et `shakespeare_test`. Quand on exécute le fichier, on
     doit obtenir :
 
     >>> python explore_corpus
@@ -126,5 +126,3 @@ if __name__ == "__main__":
     corpus = pre.read_and_preprocess("./data/" + fileName + ".txt")
     print("--" + fileName + "--")
     explore(corpus)
-
-
