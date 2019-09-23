@@ -97,9 +97,6 @@ def count_ngrams(corpus, n):
             else:
                 nested_dictionnary[n_gram[0:n - 1]] = collections.defaultdict(lambda: 0)
                 nested_dictionnary[n_gram[0:n - 1]][n_gram[-1]] = 1
-    if n == 1:
-        nested_dictionnary[()]['<s>'] = 0
-        nested_dictionnary[()]['</s>'] = 0
     return nested_dictionnary
 
 def compute_MLE(counts):
