@@ -178,19 +178,28 @@ if __name__ == "__main__":
         + " ,perplexité du modèle Laplace : " + str(evaluate(LAPLACE_model,corpus_test)))
 
 
-    # print("Question 2")
-    # for i in range(1,n+1):
-    #     x = []
-    #     y = []
-    #     print("n = " + str(i))
-    #     for gamma in np.logspace(-5, 0, 10):
-    #         y.append(evaluate_gamma(gamma, corpus_train, corpus_test, i))
-    #         x.append(gamma)
-    #
-    #     plt.plot(x,y)
-    #     plt.xlabel('gamma')
-    #     plt.ylabel('perplexity')
-    #     plt.show()
+    print("Question 2")
+    for i in range(1,n+1):
+        x = []
+        y = []
+        print("n = " + str(i))
+        bestGamma = 0
+        bestValue = float('inf')
+        for gamma in np.logspace(-5, 0, 10):
+            perpex = evaluate_gamma(gamma, corpus_train, corpus_test, i)
+            y.append(perpex)
+            x.append(gamma)
+            if perpex < bestValue:
+                bestValue = perpex
+                bestGamma = gamma
+        print("Meilleure valeur de gamma = " + str(bestGamma))
+        print("Valeur de la perplexité pour ce gamma = " + str(bestValue))
+        plt.plot(x,y)
+        plt.xlabel('gamma')
+        plt.ylabel('perplexity')
+        plt.show()
+
+
 
     # fileName_train = "trump"
     # corpus_train = pre.read_and_preprocess("./data/" + fileName_train + ".txt")
