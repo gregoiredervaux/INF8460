@@ -10,3 +10,9 @@ TP1/.idea/*
 # fichier pdf
 
 *.pdf
+
+# TP2 data
+TP2/data/*
+
+# fichier d'IDE
+TP2/.idea/*
