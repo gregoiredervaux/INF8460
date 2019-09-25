@@ -16,3 +16,32 @@ for train_type in ["test", "train"]:
                 with open(path + file, "r") as f:
                     dictionnaire[train_type][classification][int(id_review)] = { "rate": int(rate_review),
                                                                             "review": f.read()}
+
+
+##################### Question 2 #####################
+
+from nltk.corpus import stopwords
+import string
+
+def clean_doc(dictio):
+
+    for type_dataset in dictio:
+        for sentiment_type in dictio[type_dataset]:
+            for id_review in dictio[type_dataset][sentiment_type]:
+                review = dictio[type_dataset][sentiment_type][id_review]["review"]
+                review = review.translate ({ord(c): " " for c in "!@#$%^&*()[]{};:,./<>?\|`~-=_+"})
+                review = review.split()
+                stop_words = set(stopwords.words('english'))
+                review_list = [w for w in review if not w in stop_words]
+                segmentize_review = []
+
+                for word in review_list:
+                    if(re.match('^[a-zA-Z]+$', word) and len(word)>1):
+                        segmentize_review.append(word)
+
+                dictio[type_dataset][sentiment_type][id_review]["review"] = segmentize_review
+
+
+dictionnaire_segm = dictionnaire.copy()
+clean_doc(dictionnaire_segm)
+print(dictionnaire_segm["test"]["pos"][0]["review"])
