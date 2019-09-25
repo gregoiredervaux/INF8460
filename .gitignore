@@ -6,6 +6,8 @@ TP1/.idea/*
 
 # cache python
 */__pycache__/*
+*/.ipynb_checkpoints/*
+TP2/.ipynb_checkpoints/*
 
 # fichier pdf
 
