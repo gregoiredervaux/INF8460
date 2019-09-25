@@ -1,7 +1,9 @@
 import os
 import re
+import nltk
+import collections
 from nltk.corpus import stopwords
-import string
+nltk.download('stopwords')
 
 ##################### Question 1 #####################
 ## lecture
@@ -13,6 +15,7 @@ dictionnaire = {
     "train": {"pos": {},
             "neg": {}}
 }
+nb_failed_files = 0
 for train_type in ["test", "train"]:
     for classification in ["pos", "neg"]:
         path = './data/' + train_type + '/' + classification + '/'
@@ -21,8 +24,13 @@ for train_type in ["test", "train"]:
             rate_review = rate_review.split(".txt")[0]
             if int(id_review) not in dictionnaire[train_type][classification]:
                 with open(path + file, "r") as f:
-                    dictionnaire[train_type][classification][int(id_review)] = { "rate": int(rate_review),
+                    try:
+                        dictionnaire[train_type][classification][int(id_review)] = { "rate": int(rate_review),
                                                                             "review": f.read()}
+                    except:
+                        nb_failed_files += 1
+
+print("Nombre de fichiers non-ouverts : " + str(nb_failed_files))
 
 ## petit a)
 
@@ -45,9 +53,7 @@ def clean_doc(dictio):
                 dictio[type_dataset][sentiment_type][id_review]["review"] = segmentize_review
 
 
-dictionnaire_segm = dictionnaire.copy()
-clean_doc(dictionnaire_segm)
-print(dictionnaire_segm["test"]["pos"][0]["review"])
+
 
 # test dictionnaire
 
@@ -95,6 +101,27 @@ dictionnaire = {
 }
 """
 
+##b)
+def build_voc(dico_train):
+    count = collections.defaultdict(lambda: 0)
+    for classi in dico_train:
+        for review in dico_train[classi]:
+            text = dico_train[classi][review]["review"]
+            for word in text:
+                if word in count:
+                    count[word] += 1
+                else:
+                    count[word] = 1
+    n = 0
+    f = open("./data/vocab.txt", "w+")
+    for word in count:
+        if count[word] >= 5:
+            n += 1
+            f.write(word + "\n")
+    print("Nombre de mots dans le vocabulaire : " + str(n))
+    f.close()
+    return n
+
 ## c)
 def get_top_unigrams(n):
     unigrams = []
@@ -119,4 +146,7 @@ def get_top_unigrams(n):
 
     return top_unigram
 
-print(get_top_unigrams(10))
+dictionnaire_segm = dictionnaire.copy()
+clean_doc(dictionnaire_segm)
+build_voc(dictionnaire_segm["train"])
+# print(dictionnaire_segm["test"]["pos"][0]["review"])
