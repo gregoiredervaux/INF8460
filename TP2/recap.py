@@ -77,9 +77,8 @@ def build_voc(dico_train):
     f.close()
     return n
 
-dictionnaire_segm = dictionnaire.copy()
-clean_doc(dictionnaire_segm)
-build_voc(dictionnaire_segm["train"])
+clean_doc(dictionnaire)
+build_voc(dictionnaire["train"])
 # print(dictionnaire_segm["test"]["pos"][0]["review"])
 
 
