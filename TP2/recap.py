@@ -2,6 +2,7 @@ import os
 import re
 import nltk
 import collections
+import numpy as np
 from nltk.corpus import stopwords
 nltk.download('stopwords')
 
@@ -9,6 +10,7 @@ nltk.download('stopwords')
 ## lecture
 
 global dictionnaire
+
 dictionnaire = {
     "test": {"pos": {},
             "neg": {}},
@@ -40,7 +42,7 @@ def clean_doc(dictio):
         for sentiment_type in dictio[type_dataset]:
             for id_review in dictio[type_dataset][sentiment_type]:
                 review = dictio[type_dataset][sentiment_type][id_review]["review"]
-                review = review.translate ({ord(c): " " for c in "!@#$%^&*()[]{};:,./<>?\|`~-=_+"})
+                review = review.translate({ord(c): " " for c in "!@#$%^&*()[]{};:,./?\|`~-=_+"})
                 review = review.split()
                 stop_words = set(stopwords.words('english'))
                 review_list = [w for w in review if not w in stop_words]
@@ -77,59 +79,45 @@ def build_voc(dico_train):
     f.close()
     return n
 
-clean_doc(dictionnaire)
 build_voc(dictionnaire["train"])
-# print(dictionnaire_segm["test"]["pos"][0]["review"])
 
 
 ## c)
 def get_top_unigrams(n):
-    unigrams = []
-    count = []
+
+    dico_count = {}
 
     for train_type in ["test", "train"]:
         for classification in ["pos", "neg"]:
             for review in dictionnaire[train_type][classification]:
                 for word in dictionnaire[train_type][classification][review]['review']:
-                    if word not in unigrams:
-                        unigrams.append(word)
-                        count.append(1)
+                    if word not in dico_count:
+                        dico_count[word] = 1
                     else:
-                        count[unigrams.index(word)] += 1
+                        dico_count[word] += 1
 
-    top_unigram = []
-    for i in range(n):
-        max_index = count.index(max(count))
-        top_unigram.append(unigrams[max_index])
-        del unigrams[max_index]
-        del count[max_index]
-
-    return top_unigram
+    counter = collections.Counter(dico_count)
+    top_unigrams = counter.most_common(n)
+    return [couple[0] for couple in top_unigrams]
 
 print(get_top_unigrams(10))
 
 ## d)
 
 def get_top_unigrams_per_cls(n, cls):
-    unigrams = []
-    count = []
-    for train_class in ["train", "test"]:
-        for review in dictionnaire[train_class][cls]:
-            for word in dictionnaire[train_class][cls][review]['review']:
-                if word not in unigrams:
-                    unigrams.append(word)
-                    count.append(1)
+    dico_count = {}
+
+    for train_type in ["test", "train"]:
+        for review in dictionnaire[train_type][cls]:
+            for word in dictionnaire[train_type][cls][review]['review']:
+                if word not in dico_count:
+                    dico_count[word] = 1
                 else:
-                    count[unigrams.index(word)] += 1
+                    dico_count[word] += 1
 
-    top_unigram = []
-    for i in range(n):
-        max_index = count.index(max(count))
-        top_unigram.append(unigrams[max_index])
-        del unigrams[max_index]
-        del count[max_index]
-
-    return top_unigram
+    counter = collections.Counter(dico_count)
+    top_unigrams = counter.most_common(n)
+    return [couple[0] for couple in top_unigrams]
 
 
 print(get_top_unigrams_per_cls(10, "pos"))
@@ -137,3 +125,15 @@ print(get_top_unigrams_per_cls(10, "neg"))
 
 ##################### Question 2 #####################
 
+unigrams = get_top_unigrams(5000)
+print(unigrams[0:30])
+BoW = []
+for train_type in ["test", "train"]:
+    for classification in ["pos", "neg"]:
+        for review in dictionnaire[train_type][classification]:
+            new_ligne = np.zeros(len(unigrams))
+            for word in dictionnaire[train_type][classification][review]['review']:
+                if word in unigrams:
+                    new_ligne[unigrams.index(word)] = 1
+            BoW.append(new_ligne)
+## Pour la dernière question, peut être essayer une réduction de dimension
