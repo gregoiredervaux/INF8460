@@ -24,7 +24,7 @@ dictionnaire = {
 nb_failed_files = 0
 for train_type in ["test", "train"]:
     for classification in ["pos", "neg"]:
-        path = './fake_data/' + train_type + '/' + classification + '/'
+        path = './data/' + train_type + '/' + classification + '/'
         for file in os.listdir(path):
             id_review, rate_review = file.split("_")
             rate_review = rate_review.split(".txt")[0]
@@ -74,7 +74,7 @@ def build_voc(dico_train):
                 else:
                     count[word] = 1
     n = 0
-    f = open("./fake_data/vocab.txt", "w+")
+    f = open("./data/vocab.txt", "w+")
     for word in count:
         if count[word] >= 5:
             n += 1
