@@ -269,3 +269,41 @@ print("fait en : " + str(time.time() - debut_mm) + "s")
 
 
 ## Pour la dernière question, peut être essayer une réduction de dimension
+
+## Question 5
+from sklearn.naive_bayes import MultinomialNB
+
+
+# y = 0:pos 1:neg
+X_test = TFIDF_BoW[0:25000][:]
+y_test_nb = np.full((1, 12500), 0)
+y_test_nb = np.append(y_test_nb, np.full((1, 12500), 1))
+
+X_train = TFIDF_BoW[25000:][:]
+y_train = np.full((1, 12500), 0)
+y_train = np.append(y_train, np.full((1, 12500), 1))
+
+classifier = MultinomialNB()
+classifier.fit(X_train, y_train)
+y_pred_nb = classifier.predict(X_test)
+print(y_pred_nb)
+
+
+## Question 7
+from sklearn.metrics import accuracy_score, f1_score, recall_score, precision_score
+
+# accuracy
+print("Accuracy NB:")
+print(accuracy_score(y_test_nb, y_pred_nb))
+
+# precision
+print("Precision NB:")
+print(precision_score(y_test_nb, y_pred_nb, average='binary'))
+
+# recall
+print("Recall NB:")
+print(recall_score(y_test_nb, y_pred_nb, average='binary'))
+
+# F1-score
+print("F1-score NB:")
+print(f1_score(y_test_nb, y_pred_nb, average='binary'))
