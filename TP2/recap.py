@@ -47,6 +47,7 @@ def clean_doc(dictio):
             for id_review in dictio[type_dataset][sentiment_type]:
                 review = dictio[type_dataset][sentiment_type][id_review]["review"]
                 review = review.translate({ord(c): " " for c in "!@#$%^&*()[]{};:,./?\|`~-=_+"})
+                review = review.lower()
                 review = review.split()
                 stop_words = set(stopwords.words('english'))
                 review_list = [w for w in review if not w in stop_words]
@@ -222,11 +223,11 @@ def get_most_similar_PPMI(word, metric, n):
     i = 0
     if metric == "cosinus":
         for index, ligne in enumerate(matrice_PPMI):
-            vector_distance[unigrams[index]] = get_cosinus_distance(ligne_word, ligne)
+            vector_distance[unigrams[index]] = -get_cosinus_distance(ligne_word, ligne)
             i += 1
     elif metric == "euclidean":
         for index, ligne in enumerate(matrice_PPMI):
-            vector_distance[unigrams[index]] = get_euclidean_distance(ligne_word, ligne)
+            vector_distance[unigrams[index]] = -get_euclidean_distance(ligne_word, ligne)
             i += 1
     else:
         print("metric inconnue")
@@ -248,10 +249,10 @@ def get_most_similar_TFIDF(word, metric, n):
     vector_distance = {}
     if metric == "cosinus":
         for index, column in enumerate(TFIDF_BoW.T):
-            vector_distance[unigrams[index]] = get_cosinus_distance(column_word, column)
+            vector_distance[unigrams[index]] = -get_cosinus_distance(column_word, column)
     elif metric == "euclidean":
         for index, column in enumerate(TFIDF_BoW.T):
-            vector_distance[unigrams[index]] = get_euclidean_distance(column_word, column)
+            vector_distance[unigrams[index]] = -get_euclidean_distance(column_word, column)
     else:
         print("metric inconnue")
 
