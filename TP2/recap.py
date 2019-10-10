@@ -5,9 +5,12 @@ import collections
 import math
 import itertools
 import time
+import copy
 import numpy as np
+import matplotlib as plt
 from scipy.spatial import distance
 from nltk.corpus import stopwords
+from collections import *
 nltk.download('stopwords')
 
 ##################### Question 1 #####################
@@ -32,11 +35,13 @@ for train_type in ["test", "train"]:
                 with open(path + file, "r") as f:
                     try:
                         dictionnaire[train_type][classification][int(id_review)] = { "rate": int(rate_review),
-                                                                            "review": f.read()}
+                                                                            "review_str": f.read()}
                     except:
                         nb_failed_files += 1
 
 print("Nombre de fichiers non-ouverts : " + str(nb_failed_files))
+init_dictionnaire = copy.deepcopy(dictionnaire)
+
 
 ## petit a)
 
@@ -45,7 +50,7 @@ def clean_doc(dictio):
     for type_dataset in dictio:
         for sentiment_type in dictio[type_dataset]:
             for id_review in dictio[type_dataset][sentiment_type]:
-                review = dictio[type_dataset][sentiment_type][id_review]["review"]
+                review = dictio[type_dataset][sentiment_type][id_review]["review_str"]
                 review = review.translate({ord(c): " " for c in "!@#$%^&*()[]{};:,./?\|`~-=_+"})
                 review = review.lower()
                 review = review.split()
@@ -84,8 +89,7 @@ def build_voc(dico_train):
     f.close()
     return n
 
-build_voc(dictionnaire["train"])
-
+taille_voc = build_voc(dictionnaire["train"])
 
 ## c)
 def get_top_unigrams(n):
@@ -266,12 +270,127 @@ most_similar = get_most_similar_TFIDF("bad", "euclidean", 5)
 print(most_similar)
 print("fait en : " + str(time.time() - debut_mm) + "s")
 
+##################### Question 4 ###################
+
+def train_char_lm(data, order=4):
+    lm = defaultdict(Counter)
+    voc = set()
+    for review_index in data:
+        review = data[review_index]["review_str"]
+        # comme dans l'article on marque le début d'un document
+        pad = "~" * order
+        padded_review = pad + review
+        for i in range(len(padded_review) - order):
+            history, char = padded_review[i:i + order], padded_review[i + order]
+            if char not in voc: voc.add(char)
+            lm[history][char] += 1
+
+    def normalize(counter):
+        s = float(sum(counter.values()))
+        unsmooth = {}
+        for c, cnt in counter.items():
+            unsmooth[c] = math.log((cnt + 1) / (s + len(voc)))
+        unsmooth["not_found"] = math.log(1 / (s + len(voc)))
+        return unsmooth
+
+    outlm = {hist: normalize(chars) for hist, chars in lm.items()}
+    outlm["not_found"] = math.log(1 / len(voc))
+    return outlm
+
+
+def calcul_proba_char(document, lm, order=3):
+    proba = 0
+    for i in range(len(document) - order):
+        history, word = document[i:i + order], document[i + order]
+        if history in lm:
+            if word in lm[history]:
+                proba += lm[history][word]
+            else:
+                proba += lm[history]["not_found"]
+        else:
+            proba += lm["not_found"]
+    return proba
+# on crée un dictionnaire pour stocker nos prédictions
+pred = {
+    "clean" : { "pos": {},
+              "neg": {}},
+    "raw": { "pos": {},
+              "neg": {}}
+       }
+
+pos = []
+neg = []
+print("sur le dictionnaire propre")
+n = 10
+for i in range(3, n):
+    lm_pos = train_char_lm(dictionnaire["train"]["pos"], i)
+    lm_neg = train_char_lm(dictionnaire["train"]["neg"], i)
+    for classe in init_dictionnaire["train"]:
+        pred["clean"][classe][i] = []
+        class_by_index = []
+        nb_pos = 0
+        for index_doc in range(len(dictionnaire["test"]["pos"])):
+            proba_pos = calcul_proba_char(dictionnaire["test"][classe][index_doc]["review_str"], lm_pos, i)
+            proba_neg = calcul_proba_char(dictionnaire["test"][classe][index_doc]["review_str"], lm_neg, i)
+            if proba_pos > proba_neg:
+                nb_pos += 1
+                pred["clean"][classe][i].append(1)
+            else:
+                pred["clean"][classe][i].append(0)
+
+        if classe == "pos":
+            pos.append(nb_pos / len(dictionnaire["test"]["pos"]))
+        else:
+            neg.append((len(dictionnaire["test"]["pos"]) - nb_pos) / len(dictionnaire["test"]["pos"]))
+
+plt.plot(list(range(3, n)), pos, label="class positif")
+plt.plot(list(range(3,n)), neg, label="class négatif")
+plt.xlabel('orders')
+plt.ylabel('précision')
+plt.legend()
+plt.show()
+
+
+pos = []
+neg = []
+print("\nsur le dictionnaire sans modification:")
+for i in range(3, n):
+    class_by_index = []
+    nb_pos = 0
+    lm_pos = train_char_lm(init_dictionnaire["train"]["pos"], i)
+    lm_neg = train_char_lm(init_dictionnaire["train"]["neg"], i)
+    for classe in init_dictionnaire["train"]:
+        pred["raw"][classe][i] = []
+        class_by_index = []
+        nb_pos = 0
+        for index_doc in range(len(dictionnaire["test"][classe])):
+            proba_pos = calcul_proba_char(init_dictionnaire["test"][classe][index_doc]["review_str"], lm_pos, i)
+            proba_neg = calcul_proba_char(init_dictionnaire["test"][classe][index_doc]["review_str"], lm_neg, i)
+            if proba_pos > proba_neg:
+                nb_pos += 1
+                pred["raw"][classe][i].append(1)
+            else:
+                pred["raw"][classe][i].append(0)
+
+        if classe == "pos":
+            pos.append(nb_pos / len(dictionnaire["test"]["pos"]))
+        else:
+            neg.append((len(dictionnaire["test"]["pos"]) - nb_pos) / len(dictionnaire["test"]["pos"]))
+
+plt.plot(list(range(3,n)), pos, label="class positif")
+plt.plot(list(range(3,n)),neg, label="class négatif")
+plt.xlabel('orders')
+plt.ylabel('précision')
+plt.legend()
+plt.show()
+
+
+################## suite Question 1 #################
 
 
 
-## Pour la dernière question, peut être essayer une réduction de dimension
 
-## Question 5
+##################### Question 5 #####################
 from sklearn.naive_bayes import MultinomialNB
 
 
@@ -289,8 +408,11 @@ classifier.fit(X_train, y_train)
 y_pred_nb = classifier.predict(X_test)
 print(y_pred_nb)
 
+##################### Question 6 #####################
 
-## Question 7
+# peut être essayer une réduction de dimension
+
+##################### Question 7 #####################
 from sklearn.metrics import accuracy_score, f1_score, recall_score, precision_score
 
 # accuracy
