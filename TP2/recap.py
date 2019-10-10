@@ -27,7 +27,7 @@ dictionnaire = {
 nb_failed_files = 0
 for train_type in ["test", "train"]:
     for classification in ["pos", "neg"]:
-        path = './data/' + train_type + '/' + classification + '/'
+        path = './fakeData/' + train_type + '/' + classification + '/'
         for file in os.listdir(path):
             id_review, rate_review = file.split("_")
             rate_review = rate_review.split(".txt")[0]
@@ -272,117 +272,117 @@ print("fait en : " + str(time.time() - debut_mm) + "s")
 
 ##################### Question 4 ###################
 
-def train_char_lm(data, order=4):
-    lm = defaultdict(Counter)
-    voc = set()
-    for review_index in data:
-        review = data[review_index]["review_str"]
-        # comme dans l'article on marque le début d'un document
-        pad = "~" * order
-        padded_review = pad + review
-        for i in range(len(padded_review) - order):
-            history, char = padded_review[i:i + order], padded_review[i + order]
-            if char not in voc: voc.add(char)
-            lm[history][char] += 1
-
-    def normalize(counter):
-        s = float(sum(counter.values()))
-        unsmooth = {}
-        for c, cnt in counter.items():
-            unsmooth[c] = math.log((cnt + 1) / (s + len(voc)))
-        unsmooth["not_found"] = math.log(1 / (s + len(voc)))
-        return unsmooth
-
-    outlm = {hist: normalize(chars) for hist, chars in lm.items()}
-    outlm["not_found"] = math.log(1 / len(voc))
-    return outlm
-
-
-def calcul_proba_char(document, lm, order=3):
-    proba = 0
-    for i in range(len(document) - order):
-        history, word = document[i:i + order], document[i + order]
-        if history in lm:
-            if word in lm[history]:
-                proba += lm[history][word]
-            else:
-                proba += lm[history]["not_found"]
-        else:
-            proba += lm["not_found"]
-    return proba
-# on crée un dictionnaire pour stocker nos prédictions
-pred = {
-    "clean" : { "pos": {},
-              "neg": {}},
-    "raw": { "pos": {},
-              "neg": {}}
-       }
-
-pos = []
-neg = []
-print("sur le dictionnaire propre")
-n = 10
-for i in range(3, n):
-    lm_pos = train_char_lm(dictionnaire["train"]["pos"], i)
-    lm_neg = train_char_lm(dictionnaire["train"]["neg"], i)
-    for classe in init_dictionnaire["train"]:
-        pred["clean"][classe][i] = []
-        class_by_index = []
-        nb_pos = 0
-        for index_doc in range(len(dictionnaire["test"]["pos"])):
-            proba_pos = calcul_proba_char(dictionnaire["test"][classe][index_doc]["review_str"], lm_pos, i)
-            proba_neg = calcul_proba_char(dictionnaire["test"][classe][index_doc]["review_str"], lm_neg, i)
-            if proba_pos > proba_neg:
-                nb_pos += 1
-                pred["clean"][classe][i].append(1)
-            else:
-                pred["clean"][classe][i].append(0)
-
-        if classe == "pos":
-            pos.append(nb_pos / len(dictionnaire["test"]["pos"]))
-        else:
-            neg.append((len(dictionnaire["test"]["pos"]) - nb_pos) / len(dictionnaire["test"]["pos"]))
-
-plt.plot(list(range(3, n)), pos, label="class positif")
-plt.plot(list(range(3,n)), neg, label="class négatif")
-plt.xlabel('orders')
-plt.ylabel('précision')
-plt.legend()
-plt.show()
-
-
-pos = []
-neg = []
-print("\nsur le dictionnaire sans modification:")
-for i in range(3, n):
-    class_by_index = []
-    nb_pos = 0
-    lm_pos = train_char_lm(init_dictionnaire["train"]["pos"], i)
-    lm_neg = train_char_lm(init_dictionnaire["train"]["neg"], i)
-    for classe in init_dictionnaire["train"]:
-        pred["raw"][classe][i] = []
-        class_by_index = []
-        nb_pos = 0
-        for index_doc in range(len(dictionnaire["test"][classe])):
-            proba_pos = calcul_proba_char(init_dictionnaire["test"][classe][index_doc]["review_str"], lm_pos, i)
-            proba_neg = calcul_proba_char(init_dictionnaire["test"][classe][index_doc]["review_str"], lm_neg, i)
-            if proba_pos > proba_neg:
-                nb_pos += 1
-                pred["raw"][classe][i].append(1)
-            else:
-                pred["raw"][classe][i].append(0)
-
-        if classe == "pos":
-            pos.append(nb_pos / len(dictionnaire["test"]["pos"]))
-        else:
-            neg.append((len(dictionnaire["test"]["pos"]) - nb_pos) / len(dictionnaire["test"]["pos"]))
-
-plt.plot(list(range(3,n)), pos, label="class positif")
-plt.plot(list(range(3,n)),neg, label="class négatif")
-plt.xlabel('orders')
-plt.ylabel('précision')
-plt.legend()
-plt.show()
+# def train_char_lm(data, order=4):
+#     lm = defaultdict(Counter)
+#     voc = set()
+#     for review_index in data:
+#         review = data[review_index]["review_str"]
+#         # comme dans l'article on marque le début d'un document
+#         pad = "~" * order
+#         padded_review = pad + review
+#         for i in range(len(padded_review) - order):
+#             history, char = padded_review[i:i + order], padded_review[i + order]
+#             if char not in voc: voc.add(char)
+#             lm[history][char] += 1
+#
+#     def normalize(counter):
+#         s = float(sum(counter.values()))
+#         unsmooth = {}
+#         for c, cnt in counter.items():
+#             unsmooth[c] = math.log((cnt + 1) / (s + len(voc)))
+#         unsmooth["not_found"] = math.log(1 / (s + len(voc)))
+#         return unsmooth
+#
+#     outlm = {hist: normalize(chars) for hist, chars in lm.items()}
+#     outlm["not_found"] = math.log(1 / len(voc))
+#     return outlm
+#
+#
+# def calcul_proba_char(document, lm, order=3):
+#     proba = 0
+#     for i in range(len(document) - order):
+#         history, word = document[i:i + order], document[i + order]
+#         if history in lm:
+#             if word in lm[history]:
+#                 proba += lm[history][word]
+#             else:
+#                 proba += lm[history]["not_found"]
+#         else:
+#             proba += lm["not_found"]
+#     return proba
+# # on crée un dictionnaire pour stocker nos prédictions
+# pred = {
+#     "clean" : { "pos": {},
+#               "neg": {}},
+#     "raw": { "pos": {},
+#               "neg": {}}
+#        }
+#
+# pos = []
+# neg = []
+# print("sur le dictionnaire propre")
+# n = 10
+# for i in range(3, n):
+#     lm_pos = train_char_lm(dictionnaire["train"]["pos"], i)
+#     lm_neg = train_char_lm(dictionnaire["train"]["neg"], i)
+#     for classe in init_dictionnaire["train"]:
+#         pred["clean"][classe][i] = []
+#         class_by_index = []
+#         nb_pos = 0
+#         for index_doc in range(len(dictionnaire["test"]["pos"])):
+#             proba_pos = calcul_proba_char(dictionnaire["test"][classe][index_doc]["review_str"], lm_pos, i)
+#             proba_neg = calcul_proba_char(dictionnaire["test"][classe][index_doc]["review_str"], lm_neg, i)
+#             if proba_pos > proba_neg:
+#                 nb_pos += 1
+#                 pred["clean"][classe][i].append(1)
+#             else:
+#                 pred["clean"][classe][i].append(0)
+#
+#         if classe == "pos":
+#             pos.append(nb_pos / len(dictionnaire["test"]["pos"]))
+#         else:
+#             neg.append((len(dictionnaire["test"]["pos"]) - nb_pos) / len(dictionnaire["test"]["pos"]))
+#
+# plt.plot(list(range(3, n)), pos, label="class positif")
+# plt.plot(list(range(3,n)), neg, label="class négatif")
+# plt.xlabel('orders')
+# plt.ylabel('précision')
+# plt.legend()
+# plt.show()
+#
+#
+# pos = []
+# neg = []
+# print("\nsur le dictionnaire sans modification:")
+# for i in range(3, n):
+#     class_by_index = []
+#     nb_pos = 0
+#     lm_pos = train_char_lm(init_dictionnaire["train"]["pos"], i)
+#     lm_neg = train_char_lm(init_dictionnaire["train"]["neg"], i)
+#     for classe in init_dictionnaire["train"]:
+#         pred["raw"][classe][i] = []
+#         class_by_index = []
+#         nb_pos = 0
+#         for index_doc in range(len(dictionnaire["test"][classe])):
+#             proba_pos = calcul_proba_char(init_dictionnaire["test"][classe][index_doc]["review_str"], lm_pos, i)
+#             proba_neg = calcul_proba_char(init_dictionnaire["test"][classe][index_doc]["review_str"], lm_neg, i)
+#             if proba_pos > proba_neg:
+#                 nb_pos += 1
+#                 pred["raw"][classe][i].append(1)
+#             else:
+#                 pred["raw"][classe][i].append(0)
+#
+#         if classe == "pos":
+#             pos.append(nb_pos / len(dictionnaire["test"]["pos"]))
+#         else:
+#             neg.append((len(dictionnaire["test"]["pos"]) - nb_pos) / len(dictionnaire["test"]["pos"]))
+#
+# plt.plot(list(range(3,n)), pos, label="class positif")
+# plt.plot(list(range(3,n)),neg, label="class négatif")
+# plt.xlabel('orders')
+# plt.ylabel('précision')
+# plt.legend()
+# plt.show()
 
 
 ################## suite Question 1 #################
@@ -395,13 +395,13 @@ from sklearn.naive_bayes import MultinomialNB
 
 
 # y = 0:pos 1:neg
-X_test = TFIDF_BoW[0:25000][:]
-y_test_nb = np.full((1, 12500), 0)
-y_test_nb = np.append(y_test_nb, np.full((1, 12500), 1))
+X_test = TFIDF_BoW[0:len(dictionnaire["test"]["pos"])+len(dictionnaire["test"]["neg"])][:]
+y_test_nb = np.full((1, len(dictionnaire["test"]["pos"])), 0)
+y_test_nb = np.append(y_test_nb, np.full((1, len(dictionnaire["test"]["neg"])), 1))
 
-X_train = TFIDF_BoW[25000:][:]
-y_train = np.full((1, 12500), 0)
-y_train = np.append(y_train, np.full((1, 12500), 1))
+X_train = TFIDF_BoW[len(dictionnaire["test"]["pos"])+len(dictionnaire["test"]["neg"]):][:]
+y_train = np.full((1, len(dictionnaire["train"]["pos"])), 0)
+y_train = np.append(y_train, np.full((1, len(dictionnaire["train"]["neg"])), 1))
 
 classifier = MultinomialNB()
 classifier.fit(X_train, y_train)
@@ -409,24 +409,51 @@ y_pred_nb = classifier.predict(X_test)
 print(y_pred_nb)
 
 ##################### Question 6 #####################
+from sklearn.decomposition import TruncatedSVD
 
-# peut être essayer une réduction de dimension
+SVD = TruncatedSVD(100)
+new_X_train = np.matrix(SVD.fit_transform(X_train))
+new_X_train = np.subtract(new_X_train, new_X_train.min())
+classifier.fit(new_X_train, y_train)
+new_X_test = np.matrix(SVD.fit_transform(X_test))
+new_X_test = np.subtract(new_X_test, new_X_test.min())
+y_pred_svdNB = classifier.predict(new_X_test)
+
+classifier = MultinomialNB()
+PPMI_doc = calculate_PPMI(BoW)
+PPMI_doc = [[el+1 for el in row] for row in PPMI_doc]
+X_test = PPMI_doc[0:len(dictionnaire["test"]["pos"])+len(dictionnaire["test"]["neg"])][:]
+X_train = PPMI_doc[len(dictionnaire["test"]["pos"])+len(dictionnaire["test"]["neg"]):][:]
+classifier.fit(X_train, y_train)
+y_pred_multinomialNB = classifier.predict(X_test)
+print(y_pred_multinomialNB)
+
 
 ##################### Question 7 #####################
 from sklearn.metrics import accuracy_score, f1_score, recall_score, precision_score
 
-# accuracy
-print("Accuracy NB:")
-print(accuracy_score(y_test_nb, y_pred_nb))
+def evaluate(y_test, y_pred):
+    # accuracy
+    print("Accuracy NB:")
+    print(accuracy_score(y_test, y_pred))
 
-# precision
-print("Precision NB:")
-print(precision_score(y_test_nb, y_pred_nb, average='binary'))
+    # precision
+    print("Precision NB:")
+    print(precision_score(y_test, y_pred, average='binary'))
 
-# recall
-print("Recall NB:")
-print(recall_score(y_test_nb, y_pred_nb, average='binary'))
+    # recall
+    print("Recall NB:")
+    print(recall_score(y_test, y_pred, average='binary'))
 
-# F1-score
-print("F1-score NB:")
-print(f1_score(y_test_nb, y_pred_nb, average='binary'))
+    # F1-score
+    print("F1-score NB:")
+    print(f1_score(y_test, y_pred, average='binary'))
+
+print("Evaluation of Naive Bayes Multinomial with TF-IDF:")
+evaluate(y_test_nb, y_pred_nb)
+print("")
+print("Evaluation of Naive Bayes Multinomial with TF-IDF and SVD:")
+evaluate(y_test_nb, y_pred_svdNB)
+print("")
+print("Evaluation of Naive Bayes Multinomial with PPMI:")
+evaluate(y_test_nb, y_pred_multinomialNB)
